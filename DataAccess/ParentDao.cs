@@ -1,87 +1,147 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
-using System.Linq;
 using Dapper;
 
 namespace DataAccess.Objects
 {
     public class ParentDao
     {
-        private readonly IDbConnection _connection;
+        private readonly IDbConnection Connection;
+        private ChildDao ChildDao;
+        private HandledExceptions HandledExceptions = new(); 
 
         public ParentDao(IDbConnection connection)
         {
-            _connection = connection;
+            Connection = connection;
+            ChildDao = new ChildDao(Connection);
         }
 
-        public Parent? GetParent(int itemId)
+        public Parent? Get(int itemId)
         {
-            return _connection.QueryFirstOrDefault<Parent>("SELECT * FROM Parents WHERE Id = @ID", new {ID = itemId});
+            var exec = Connection.QueryFirstOrDefault<Parent>("SELECT * FROM Parents WHERE Id = @ID", new {ID = itemId});
+            if (exec == null)
+            {
+                throw new SystemException();
+            }
+
+            return exec;
         }
 
-        public IEnumerable<GrandParent> GetAllParents()
+        public IEnumerable<Parent> GetAll()
         {
-            return _connection.Query<GrandParent>("SELECT * FROM Parents");
+            return Connection.Query<Parent>("SELECT * FROM Parents");
         }
 
-        public int AddParent(Parent item)
+        public int Add(Parent item)
         {
-            return _connection.Query<int>("INSERT INTO Parents (Name, Description) VALUES (@Name, @Description); SELECT CAST(SCOPE_IDENTITY() AS INT)", item).Single();
+            SystemException exception = new();
+            var exec = 0; 
+            try
+            {
+               exec =  Connection.ExecuteScalar<int>("INSERT INTO Parents (Name, Description, GrandParentId) VALUES (@Name, @Description, @GrandParentId); SELECT CAST(SCOPE_IDENTITY() AS INT)", item);
+            }
+            catch (Exception ex)
+            {
+                exception = HandledExceptions.CheckDuplicateNameException(ex, exception);
+                throw exception;
+            }
+
+            return exec;
         }
         
-        public void UpdateParent(Parent item)
+        public int Update(Parent item)
         {
-            _connection.Execute("UPDATE Parents SET Name = @Name, Description = @Description WHERE Id = @Id", new {Name = item.Name, Description = item.Description, Id = item.Id});
+            SystemException exception = new();
+            var exec = 0;
+            try
+            {
+                exec = Connection.ExecuteScalar<int>("UPDATE Parents SET Name = @Name, Description = @Description, GrandParentId = @GrandParentId WHERE Id = @Id; SELECT CAST(SCOPE_IDENTITY() AS INT)", new {Name = item.Name, Description = item.Description, GrandParentId = item.GrandParentId, Id = item.Id});
+            }
+            catch (Exception ex)
+            {
+                exception = HandledExceptions.CheckItemNotFound(ex, exception);
+                throw exception;
+            }
+
+            return exec;
+        }
+        
+        public int UpdateParentGrandParent(Parent item)
+        {
+            SystemException exception = new();
+            var exec = 0;
+            try
+            {
+                exec = Connection.ExecuteScalar<int>("UPDATE Parents SET GrandParentId = @GrandParentId WHERE Id = @Id; SELECT CAST(SCOPE_IDENTITY() AS INT)", new { GrandParentId = item.GrandParentId, Id = item.Id});
+            }
+            catch (Exception ex)
+            {
+                exception = HandledExceptions.CheckItemNotFound(ex, exception);
+                throw exception;
+            }
+
+            return exec;
         }
 
         public int[] AddChildrenToParent(int itemId, int[] children)
         {
-            _connection.Open();
+            Connection.Open();
 
-            using var transaction = _connection.BeginTransaction();
+            using var transaction = Connection.BeginTransaction();
             try
             {
                 foreach (var childId in children)
                 {
+                    try
+                    {
+                        ChildDao.Get(childId);
+                    }   
+                    catch (Exception)
+                    {
+                        transaction.Rollback();
+                        throw new SystemException($"Child not found {childId}");
+                    }
+
                     AddChildToParent(itemId, childId, transaction);
                 }
 
                 transaction.Commit();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 transaction.Rollback();
-                throw;
+                throw ex;
             }
 
-            _connection.Close();
+            Connection.Close();
             return children;
         }
 
         public void AddChildToParent(int itemId, int childId, IDbTransaction transaction)
         {
-            _connection.Execute("INSERT INTO ParentsChildren (ParentId, ChildId) VALUES (@ParentId, @ChildId)", new {ParentId = itemId, ChildId = childId}, transaction);
+            Connection.Execute("INSERT INTO ParentsChildren (ParentId, ChildId) VALUES (@ParentId, @ChildId)", new {ParentId = itemId, ChildId = childId}, transaction);
         }
         
-        public void DeleteParent(int itemId)
+        public int Delete(int itemId)
         {
-            _connection.Open();
+            Connection.Open();
     
-            using var transaction = _connection.BeginTransaction();
+            using var transaction = Connection.BeginTransaction();
             try
             {
-                _connection.Execute("DELETE FROM Parents WHERE Id = @Id", new {Id = itemId}, transaction);
-                _connection.Execute("DELETE FROM ParentsChildren WHERE ParentId = @ParentId", new {ParentId = itemId},transaction);
+                Connection.Execute("DELETE FROM Parents WHERE Id = @Id", new {Id = itemId}, transaction);
+                Connection.Execute("DELETE FROM ParentsChildren WHERE ParentId = @ParentId", new {ParentId = itemId},transaction);
                 transaction.Commit();
+                
             }
             catch (Exception)
             {
                 transaction.Rollback();
                 throw;
             }
-            _connection.Close();
+            Connection.Close();
+            return itemId;
         }
         
         public void DeleteChildFromParent(int itemId, int childId=0)
@@ -89,10 +149,10 @@ namespace DataAccess.Objects
             switch (childId)
             {
                 case 0:
-                    _connection.Execute("DELETE FROM ParentsChildren WHERE Parentd = @ParentId", new {Parentd = itemId});
+                    Connection.Execute("DELETE FROM ParentsChildren WHERE Parentd = @ParentId", new {Parentd = itemId});
                     break;
                 default:
-                    _connection.Execute("DELETE FROM ParentsChildren WHERE ParentId = @ParentId AND ChildId = @ChildId", new {ParentId = itemId, ChildId = @childId});
+                    Connection.Execute("DELETE FROM ParentsChildren WHERE ParentId = @ParentId AND ChildId = @ChildId", new {ParentId = itemId, ChildId = @childId});
                     break;
             }
         }
