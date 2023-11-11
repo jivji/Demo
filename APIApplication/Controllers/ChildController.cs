@@ -11,15 +11,25 @@ namespace DemoAPIApplication.Controllers
     [Route("[controller]")]
     public class ChildController : Controller
     {
-        private readonly ChildDao childDao = new(new SqlConnection(Configuration.GetConnectionString()));
+        private readonly IChildDao ChildDao;
+
+        public ChildController()
+        {
+            ChildDao = new ChildDao(new SqlConnection(Configuration.GetConnectionString()));
+        }
+
+        public ChildController(IChildDao childDao = null!) : base()
+        {
+            this.ChildDao = childDao ;
+        }
 
         [HttpGet(Name = "GetChildren")]
         public ActionResult<IEnumerable<Models.Child>> Get(int id)
         {
             try
             {
-                if (id == 0) return Ok(childDao.GetAll());
-                var item = childDao.Get(id);
+                if (id == 0) return Ok(ChildDao.GetAll());
+                var item = ChildDao.Get(id);
                 if (item == null)
                 {
                     return NotFound();
@@ -50,7 +60,7 @@ namespace DemoAPIApplication.Controllers
             
             try
             {
-                return Ok(childDao.Add(itemToAdd));
+                return Ok(ChildDao.Add(itemToAdd));
             }
             catch (Exception e)
             {
@@ -70,7 +80,7 @@ namespace DemoAPIApplication.Controllers
             
             try
             {
-                return Ok(childDao.Update(itemToUpdate));
+                return Ok(ChildDao.Update(itemToUpdate));
             }
             catch (Exception e)
             {
@@ -83,7 +93,7 @@ namespace DemoAPIApplication.Controllers
         {
             try
             {
-                return Ok(childDao.Delete(id));
+                return Ok(ChildDao.Delete(id));
             }
             catch (Exception e)
             {

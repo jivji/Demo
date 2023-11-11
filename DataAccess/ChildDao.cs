@@ -6,7 +6,16 @@ using DataAccess.Objects;
 
 namespace DataAccess
 {
-    public class ChildDao
+    public interface IChildDao
+    {
+        public Child Get(int itemId);
+        public IEnumerable<Child> GetAll();
+        public int Add(Child item);
+        public int Update(Child item);
+        public int Delete(int itemId);
+    }
+    
+    public class ChildDao : IChildDao
     {
         private readonly IDbConnection Connection;
         private HandledExceptions HandledExceptions = new(); 
