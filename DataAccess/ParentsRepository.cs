@@ -107,26 +107,26 @@ namespace DataAccess.Objects
 
         public int[] AddChildrenToParent(int itemId, int[] children)
         {
+            foreach (var childId in children)
+            {
+                try
+                {
+                    _childrenRepository.Get(childId);
+                }
+                catch (Exception)
+                {
+                    throw new Exception($"Child not found {childId}");
+                }
+            }
+            
             _connection.Open();
-
             using var transaction = _connection.BeginTransaction();
             try
             {
                 foreach (var childId in children)
                 {
-                    try
-                    {
-                        _childrenRepository.Get(childId);
-                    }
-                    catch (Exception)
-                    {
-                        transaction.Rollback();
-                        throw new Exception($"Child not found {childId}");
-                    }
-
                     AddChildToParent(itemId, childId, transaction);
                 }
-
                 transaction.Commit();
             }
             catch
@@ -141,8 +141,7 @@ namespace DataAccess.Objects
 
         public void AddChildToParent(int itemId, int childId, IDbTransaction transaction)
         {
-            _connection.Execute("INSERT INTO ParentsChildren (ParentId, ChildId) VALUES (@ParentId, @ChildId)",
-                new {ParentId = itemId, ChildId = childId}, transaction);
+            _connection.Execute("INSERT INTO ParentsChildren (ParentId, ChildId) VALUES (@ParentId, @ChildId)", new {ParentId = itemId, ChildId = childId}, transaction);
         }
 
         public int Delete(int itemId)

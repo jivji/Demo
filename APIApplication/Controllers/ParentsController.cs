@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
-using DataAccess;
 using DataAccess.Objects;
 using Microsoft.AspNetCore.Mvc;
 using Parent = DemoAPIApplication.Models.Parent;
@@ -14,7 +12,7 @@ namespace DemoAPIApplication.Controllers
     {
         private readonly IParentsRepository _parentsRepository;
         private readonly IGrandParentsRepository _grandParentsRepository;
-        private readonly Utility Utility = new();
+        private readonly Utility _utility = new();
 
         public ParentsController(IParentsRepository parentsRepository, IGrandParentsRepository grandParentsRepository)
         {
@@ -57,7 +55,7 @@ namespace DemoAPIApplication.Controllers
         [HttpPost(Name = "AddParent")]
         public ActionResult<Parent> Add(Parent item)
         {
-            var itemToAdd = Utility.GetAutoMapper().Map<DataAccess.Objects.Parent>(item);
+            var itemToAdd = _utility.GetAutoMapper().Map<DataAccess.Objects.Parent>(item);
 
             try
             {
@@ -86,7 +84,7 @@ namespace DemoAPIApplication.Controllers
         [HttpPut(Name = "UpdateParent")]
         public ActionResult<int> Update(Parent item, int grandParentId)
         {
-            var itemToUpdate = Utility.GetAutoMapper().Map<DataAccess.Objects.Parent>(item);
+            var itemToUpdate = _utility.GetAutoMapper().Map<DataAccess.Objects.Parent>(item);
             itemToUpdate.Id = grandParentId;
             try
             {

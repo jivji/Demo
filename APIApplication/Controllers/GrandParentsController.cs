@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using AutoMapper;
 using DataAccess;
 using DataAccess.Objects;
 using Microsoft.AspNetCore.Mvc;
-using Parent = DemoAPIApplication.Models.Parent;
 
 namespace DemoAPIApplication.Controllers
 {
