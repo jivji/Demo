@@ -5,7 +5,19 @@ using Dapper;
 
 namespace DataAccess.Objects
 {
-    public class ParentDao
+    public interface IParentDao
+    {
+        Parent? Get(int itemId);
+        IEnumerable<Parent> GetAll();
+        int Add(Parent item);
+        int Update(Parent item);
+        int UpdateParentWithGrandParent(Parent item);
+        int[] AddChildrenToParent(int itemId, int[] children);
+        void AddChildToParent(int itemId, int childId, IDbTransaction transaction);
+        int Delete(int itemId);
+    }
+
+    public class ParentDao : IParentDao
     {
         private readonly IDbConnection Connection;
         private ChildDao ChildDao;
@@ -67,7 +79,7 @@ namespace DataAccess.Objects
             return exec;
         }
         
-        public int UpdateParentGrandParent(Parent item)
+        public int UpdateParentWithGrandParent(Parent item)
         {
             SystemException exception = new();
             var exec = 0;
@@ -122,7 +134,7 @@ namespace DataAccess.Objects
         {
             Connection.Execute("INSERT INTO ParentsChildren (ParentId, ChildId) VALUES (@ParentId, @ChildId)", new {ParentId = itemId, ChildId = childId}, transaction);
         }
-        
+
         public int Delete(int itemId)
         {
             Connection.Open();
@@ -144,17 +156,7 @@ namespace DataAccess.Objects
             return itemId;
         }
         
-        public void DeleteChildFromParent(int itemId, int childId=0)
-        {
-            switch (childId)
-            {
-                case 0:
-                    Connection.Execute("DELETE FROM ParentsChildren WHERE Parentd = @ParentId", new {Parentd = itemId});
-                    break;
-                default:
-                    Connection.Execute("DELETE FROM ParentsChildren WHERE ParentId = @ParentId AND ChildId = @ChildId", new {ParentId = itemId, ChildId = @childId});
-                    break;
-            }
-        }
+
+        
     }
 }

@@ -18,7 +18,7 @@ namespace DemoAPIApplication.Controllers
             ChildDao = new ChildDao(new SqlConnection(Configuration.GetConnectionString()));
         }
 
-        public ChildController(IChildDao childDao = null!) : base()
+        public ChildController(IChildDao childDao) 
         {
             this.ChildDao = childDao ;
         }
@@ -69,7 +69,7 @@ namespace DemoAPIApplication.Controllers
         }
         
         [HttpPut(Name = "UpdateChild")]
-        public ActionResult<Models.Child> Update(Models.Child item, int id)
+        public ActionResult<int> Update(Models.Child item, int id)
         {
             var itemToUpdate = new Child()
             {
@@ -89,7 +89,7 @@ namespace DemoAPIApplication.Controllers
         }
         
         [HttpDelete(Name = "DeleteChild")]
-        public ActionResult<Models.Child> Delete(int id)
+        public ActionResult<int> Delete(int id)
         {
             try
             {

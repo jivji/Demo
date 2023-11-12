@@ -1,4 +1,8 @@
+using System.Data;
+using System.Data.SqlClient;
 using AutoMapper;
+using DataAccess;
+using DataAccess.Objects;
 using DemoAPIApplication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,6 +11,12 @@ using Microsoft.Extensions.Hosting;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddScoped<IDbConnection>((_) => new SqlConnection(Configuration.GetConnectionString()));
+
+builder.Services.AddScoped<IParentDao, ParentDao>();
+builder.Services.AddScoped<IGrandParentDao, GrandParentDao>();
+
+
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

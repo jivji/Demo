@@ -6,7 +6,17 @@ using Dapper;
 
 namespace DataAccess.Objects
 {
-    public class GrandParentDao
+    public interface IGrandParentDao
+    {
+        GrandParent? Get(int id);
+        IEnumerable<GrandParent> GetAll();
+        int Add(GrandParent item);
+        int Update(GrandParent item);
+        int Delete(int itemId);
+        int UpdateGrandParentWithPrimaryChild(int itemId, int childId);
+    }
+
+    public class GrandParentDao : IGrandParentDao
     {
             private readonly IDbConnection Connection;
             private HandledExceptions HandledExceptions = new HandledExceptions(); 

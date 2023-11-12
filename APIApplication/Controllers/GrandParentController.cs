@@ -4,6 +4,7 @@ using System.Data.SqlClient;
 using DataAccess;
 using DataAccess.Objects;
 using Microsoft.AspNetCore.Mvc;
+using Parent = DemoAPIApplication.Models.Parent;
 
 namespace DemoAPIApplication.Controllers
 {
@@ -11,10 +12,22 @@ namespace DemoAPIApplication.Controllers
     [Route("[controller]")]
     public class GrandParentController : Controller
     {
-        private readonly GrandParentDao GrandParentDao = new(new SqlConnection(Configuration.GetConnectionString()));
-        private readonly ChildDao ChildDao = new(new SqlConnection(Configuration.GetConnectionString()));
+        private readonly IGrandParentDao GrandParentDao;
+        private readonly IChildDao ChildDao;
         private readonly Utility Utility = new();
 
+        public GrandParentController()
+        {
+            GrandParentDao = new GrandParentDao(new SqlConnection(Configuration.GetConnectionString()));
+            ChildDao = new ChildDao(new SqlConnection(Configuration.GetConnectionString()));
+        }
+
+        public GrandParentController(IGrandParentDao grandParentDao , IChildDao childDao)
+        {
+            GrandParentDao = grandParentDao ;
+            ChildDao = childDao ;
+        }
+        
         [HttpGet(Name = "GetGrandParents")]
         public ActionResult<IEnumerable<Models.GrandParent>> Get(int id)
         {

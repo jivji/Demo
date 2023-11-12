@@ -12,10 +12,21 @@ namespace DemoAPIApplication.Controllers
     [Route("[controller]/[action]")]
     public class ParentController : Controller
     {
-        private readonly ParentDao ParentDao = new(new SqlConnection(Configuration.GetConnectionString()));
-        private readonly ChildDao ChildDao = new(new SqlConnection(Configuration.GetConnectionString()));
-        private readonly GrandParentDao GrandParentDao = new(new SqlConnection(Configuration.GetConnectionString()));
+        private readonly IParentDao ParentDao;
+        private readonly IGrandParentDao GrandParentDao;
         private readonly Utility Utility = new();
+
+        public ParentController(IParentDao parentDao, IGrandParentDao grandParentDao)
+        {
+            ParentDao = parentDao;
+            GrandParentDao = grandParentDao;
+        }
+        
+        // public ParentController()
+        // {
+        //     GrandParentDao = new GrandParentDao(new SqlConnection(Configuration.GetConnectionString()));
+        //     ParentDao = new ParentDao(new SqlConnection(Configuration.GetConnectionString()));
+        // }
 
         [HttpGet(Name = "GetParents")]
         public ActionResult<IEnumerable<Parent>> Get(int id)
@@ -73,15 +84,15 @@ namespace DemoAPIApplication.Controllers
         }
 
         [HttpPut(Name = "UpdateParent")]
-        public ActionResult<Parent> Update(Parent item, int id)
+        public ActionResult<int> Update(Parent item, int grandParentId)
         {
             var itemToUpdate = Utility.GetAutoMapper().Map<DataAccess.Objects.Parent>(item);
-            itemToUpdate.Id = id;
+            itemToUpdate.Id = grandParentId;
             try
             {
                 if (itemToUpdate.Name == null && itemToUpdate.Description == null)
                 {
-                    return Ok(ParentDao.UpdateParentGrandParent(itemToUpdate));
+                    return Ok(ParentDao.UpdateParentWithGrandParent(itemToUpdate));
                 }
 
                 return Ok(ParentDao.Update(itemToUpdate));

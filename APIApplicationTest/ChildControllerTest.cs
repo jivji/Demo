@@ -142,29 +142,5 @@ namespace APIApplicationTest
             // Assert
             Assert.IsTrue(result.Result is OkObjectResult);
         }
-
-        [TestMethod]
-        public void OneGrandParentMustHavePrimaryChild()
-        {
-            
-        }
-        
-        [TestMethod]
-        public void EachChildMustHaveGrandParent()
-        {
-            
-        }
-        
-        [TestMethod]
-        public void OneGrandParentMustHaveOneOrManyParents()
-        {
-            
-        }
-        
-        [TestMethod]
-        public void OneParentMustHaveOneOrManyChildren()
-        {
-            
-        }
     }
 }
