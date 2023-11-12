@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using AutoMapper;
 using DataAccess;
 using DataAccess.Objects;
+using DemoAPIApplication;
 using DemoAPIApplication.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -10,33 +12,47 @@ using Moq;
 namespace APIApplicationTest
 {
     [TestClass]
-    public class GrandParentControllerTest : Controller
+    public class GrandParentsControllerTest : Controller
     {
+        private IMapper? _mapper;
+        
+        [TestInitialize]
+        public void Setup()
+        {
+            var mapperConfiguration = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile<MappingProfile>();
+            });
+
+            _mapper = mapperConfiguration.CreateMapper();
+        }
+        
         [TestMethod]
         public void GetAll_AllGrandParents()
         {
             // Arrange
-            var grandParentDaoMock = new Mock<IGrandParentDao>();
-            var childDaoMock = new Mock<IChildDao>();
+            var grandParentDaoMock = new Mock<IGrandParentsRepository>();
+            var childDaoMock = new Mock<IChildrenRepository>();
+            var mapper = new Mock<IMapper>();
             var grandParents = new List<GrandParent>()
             {
                 new()
                 {
                     Id = 1,
-                    PrimaryChild = 1,
+                    PrimaryChildId = 1,
                     Name = "Child1",
                     Description = "Description1"
                 },
                 new()
                 {
                     Id = 2,
-                    PrimaryChild = 2,
+                    PrimaryChildId = 2,
                     Name = "Child2",
                     Description = "Description2"
                 }
             };
             grandParentDaoMock.Setup(x => x.GetAll()).Returns(grandParents);
-            var grandParentController = new GrandParentController(grandParentDaoMock.Object, childDaoMock.Object);
+            var grandParentController = new GrandParentsController(grandParentDaoMock.Object, childDaoMock.Object, mapper.Object);
             
             // Act
             var result = grandParentController.Get(0);
@@ -55,8 +71,8 @@ namespace APIApplicationTest
         public void Add_ValidInputChildExists_GrandParentWithPrimaryChildAdded()
         {
             // Arrange
-            var grandParentDaoMock = new Mock<IGrandParentDao>();
-            var childDaoMock = new Mock<IChildDao>();
+            var grandParentDaoMock = new Mock<IGrandParentsRepository>();
+            var childDaoMock = new Mock<IChildrenRepository>();
             var grandParent = new DemoAPIApplication.Models.GrandParent()
             {
                 PrimaryChild = 1,
@@ -65,7 +81,7 @@ namespace APIApplicationTest
             };
             grandParentDaoMock.Setup(x => x.Add(It.IsAny<GrandParent>())).Returns(1);
             childDaoMock.Setup(x => x.Get(It.IsAny<int>())).Returns(new Child());
-            var grandParentController = new GrandParentController(grandParentDaoMock.Object, childDaoMock.Object);
+            var grandParentController = new GrandParentsController(grandParentDaoMock.Object, childDaoMock.Object, _mapper!);
             
             // Act
             var result = grandParentController.Add(grandParent);

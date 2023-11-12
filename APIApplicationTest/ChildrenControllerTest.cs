@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using AutoMapper;
 using DataAccess;
 using DataAccess.Objects;
+using DemoAPIApplication;
 using DemoAPIApplication.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -11,13 +13,26 @@ using Moq;
 namespace APIApplicationTest
 {
     [TestClass]
-    public class ChildControllerTest
+    public class ChildrenControllerTest
     {
+        private IMapper? _mapper;
+        
+        [TestInitialize]
+        public void Setup()
+        {
+            var mapperConfiguration = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile<MappingProfile>();
+            });
+
+            _mapper = mapperConfiguration.CreateMapper();
+        }
+        
         [TestMethod]
         public void GetAll_AllChildren()
         {
             // Arrange
-            var childDaoMock = new Mock<IChildDao>();
+            var childDaoMock = new Mock<IChildrenRepository>();
             var children = new List<Child>()
             {
                 new()
@@ -34,7 +49,7 @@ namespace APIApplicationTest
                 }
             };
             childDaoMock.Setup(x => x.GetAll()).Returns(children);
-            var childController = new ChildController(childDaoMock.Object);
+            var childController = new ChildrenController(childDaoMock.Object, _mapper!);
             
             // Act
             var result = childController.Get(0);
@@ -54,7 +69,7 @@ namespace APIApplicationTest
         {
             // Arrange
             var itemId = 1;
-            var childDaoMock = new Mock<IChildDao>();
+            var childDaoMock = new Mock<IChildrenRepository>();
             var child = new Child()
             {
                 Id = itemId,
@@ -62,7 +77,7 @@ namespace APIApplicationTest
                 Description = "Description1"
             };
             childDaoMock.Setup(x => x.Get(It.IsAny<int>())).Returns(child);
-            var childController = new ChildController(childDaoMock.Object);
+            var childController = new ChildrenController(childDaoMock.Object, _mapper!);
             
             // Act
             var result = childController.Get(itemId);
@@ -76,8 +91,8 @@ namespace APIApplicationTest
         {
             // Arrange
             var invalidItemId = 1;
-            var childDaoMock = new Mock<IChildDao>();
-            var childController = new ChildController(childDaoMock.Object);
+            var childDaoMock = new Mock<IChildrenRepository>();
+            var childController = new ChildrenController(childDaoMock.Object, _mapper!);
             
             // Act
             var result = childController.Get(invalidItemId);
@@ -90,14 +105,14 @@ namespace APIApplicationTest
         public void Add_ValidInput_Success()
         {
             // Arrange
-            var childDaoMock = new Mock<IChildDao>();
+            var childDaoMock = new Mock<IChildrenRepository>();
             var child = new DemoAPIApplication.Models.Child()
             {
                 Name = "Child1",
                 Description = "Description1"
             };
             childDaoMock.Setup(x => x.Add(It.IsAny<Child>())).Returns(1);
-            var childController = new ChildController(childDaoMock.Object);
+            var childController = new ChildrenController(childDaoMock.Object, _mapper!);
             
             // Act
             var result = childController.Add(child);
@@ -111,14 +126,14 @@ namespace APIApplicationTest
         {
             // Arrange
             var exsistingItemId = 1;
-            var childDaoMock = new Mock<IChildDao>();
+            var childDaoMock = new Mock<IChildrenRepository>();
             var child = new DemoAPIApplication.Models.Child()
             {
                 Name = "Child1",
                 Description = "Description1"
             };
             childDaoMock.Setup(x => x.Update(It.IsAny<Child>())).Returns(1);
-            var childController = new ChildController(childDaoMock.Object);
+            var childController = new ChildrenController(childDaoMock.Object, _mapper!);
             
             // Act
             var result = childController.Update(child, exsistingItemId);
@@ -132,9 +147,9 @@ namespace APIApplicationTest
         {
             // Arrange
             var existingItemId = 1;
-            var childDaoMock = new Mock<IChildDao>();
+            var childDaoMock = new Mock<IChildrenRepository>();
             childDaoMock.Setup(x => x.Delete(It.IsAny<int>())).Returns(1);
-            var childController = new ChildController(childDaoMock.Object);
+            var childController = new ChildrenController(childDaoMock.Object, _mapper!);
             
             // Act
             var result = childController.Delete(existingItemId);

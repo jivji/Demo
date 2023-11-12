@@ -10,16 +10,16 @@ namespace DemoAPIApplication.Controllers
 {
     [ApiController]
     [Route("[controller]/[action]")]
-    public class ParentController : Controller
+    public class ParentsController : Controller
     {
-        private readonly IParentDao ParentDao;
-        private readonly IGrandParentDao GrandParentDao;
+        private readonly IParentsRepository _parentsRepository;
+        private readonly IGrandParentsRepository _grandParentsRepository;
         private readonly Utility Utility = new();
 
-        public ParentController(IParentDao parentDao, IGrandParentDao grandParentDao)
+        public ParentsController(IParentsRepository parentsRepository, IGrandParentsRepository grandParentsRepository)
         {
-            ParentDao = parentDao;
-            GrandParentDao = grandParentDao;
+            _parentsRepository = parentsRepository;
+            _grandParentsRepository = grandParentsRepository;
         }
         
         // public ParentController()
@@ -33,8 +33,8 @@ namespace DemoAPIApplication.Controllers
         {
             try
             {
-                if (id == 0) return Ok(ParentDao.GetAll());
-                var item = ParentDao.Get(id);
+                if (id == 0) return Ok(_parentsRepository.GetAll());
+                var item = _parentsRepository.Get(id);
                 if (item == null)
                 {
                     return NotFound();
@@ -66,7 +66,7 @@ namespace DemoAPIApplication.Controllers
                     return BadRequest("GrandParentId is required.");
                 }
 
-                GrandParentDao.Get(itemToAdd.GrandParentId);
+                _grandParentsRepository.Get(itemToAdd.GrandParentId);
             }
             catch (Exception)
             {
@@ -75,7 +75,7 @@ namespace DemoAPIApplication.Controllers
 
             try
             {
-                return Ok(ParentDao.Add(itemToAdd));
+                return Ok(_parentsRepository.Add(itemToAdd));
             }
             catch (Exception e)
             {
@@ -92,10 +92,10 @@ namespace DemoAPIApplication.Controllers
             {
                 if (itemToUpdate.Name == null && itemToUpdate.Description == null)
                 {
-                    return Ok(ParentDao.UpdateParentWithGrandParent(itemToUpdate));
+                    return Ok(_parentsRepository.UpdateParentWithGrandParent(itemToUpdate));
                 }
 
-                return Ok(ParentDao.Update(itemToUpdate));
+                return Ok(_parentsRepository.Update(itemToUpdate));
             }
             catch (Exception e)
             {
@@ -108,7 +108,7 @@ namespace DemoAPIApplication.Controllers
         {
             try
             {
-                return Ok(ParentDao.AddChildrenToParent(itemId, childrenId));
+                return Ok(_parentsRepository.AddChildrenToParent(itemId, childrenId));
             }
             catch (Exception e)
             {
@@ -121,7 +121,7 @@ namespace DemoAPIApplication.Controllers
         {
             try
             {
-                return Ok(ParentDao.Delete(id));
+                return Ok(_parentsRepository.Delete(id));
             }
             catch (Exception e)
             {

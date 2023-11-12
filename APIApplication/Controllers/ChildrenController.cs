@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using AutoMapper;
 using DataAccess;
 using DataAccess.Objects;
 using Microsoft.AspNetCore.Mvc;
@@ -9,18 +10,15 @@ namespace DemoAPIApplication.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class ChildController : Controller
+    public class ChildrenController : Controller
     {
-        private readonly IChildDao ChildDao;
+        private readonly IChildrenRepository _childrenRepository;
+        private readonly IMapper _mapper;
 
-        public ChildController()
+        public ChildrenController(IChildrenRepository childrenRepository, IMapper mapper)
         {
-            ChildDao = new ChildDao(new SqlConnection(Configuration.GetConnectionString()));
-        }
-
-        public ChildController(IChildDao childDao) 
-        {
-            this.ChildDao = childDao ;
+            _childrenRepository = childrenRepository ;
+            _mapper = mapper;
         }
 
         [HttpGet(Name = "GetChildren")]
@@ -28,22 +26,25 @@ namespace DemoAPIApplication.Controllers
         {
             try
             {
-                if (id == 0) return Ok(ChildDao.GetAll());
-                var item = ChildDao.Get(id);
+                if (id == 0)
+                {
+                    var children = _childrenRepository.GetAll();
+
+                    var childrenToReturn = _mapper.Map<IEnumerable<Models.Child>>(children);
+                    return Ok(childrenToReturn);
+                }
+                
+                var item = _childrenRepository.Get(id);
                 if (item == null)
                 {
                     return NotFound();
                 }
 
-                Models.Child child = new()
-                {
-                    Name = item.Name,
-                    Description = item.Description
-                };
-
+                var child = _mapper.Map<Models.Child>(item);
+                
                 return new List<Models.Child> {child};
             }
-            catch (Exception e)
+            catch (ValidationException e)
             {
                 return BadRequest(e.Message);
             }
@@ -52,17 +53,13 @@ namespace DemoAPIApplication.Controllers
         [HttpPost(Name = "AddChild")]
         public ActionResult<Models.Child> Add(Models.Child item)
         {
-            var itemToAdd = new Child()
-            {
-                Name = item.Name,
-                Description = item.Description
-            };
+            var itemToAdd = _mapper.Map<Child>(item);
             
             try
             {
-                return Ok(ChildDao.Add(itemToAdd));
+                return Ok(_childrenRepository.Add(itemToAdd));
             }
-            catch (Exception e)
+            catch (ValidationException e)
             {
                 return BadRequest(e.Message);
             }
@@ -71,18 +68,13 @@ namespace DemoAPIApplication.Controllers
         [HttpPut(Name = "UpdateChild")]
         public ActionResult<int> Update(Models.Child item, int id)
         {
-            var itemToUpdate = new Child()
-            {
-                Id = id,
-                Name = item.Name,
-                Description = item.Description
-            };
-            
+            var itemToUpdate = _mapper.Map<Child>(item);
+
             try
             {
-                return Ok(ChildDao.Update(itemToUpdate));
+                return Ok(_childrenRepository.Update(itemToUpdate));
             }
-            catch (Exception e)
+            catch (ValidationException e)
             {
                 return BadRequest(e.Message);
             }
@@ -93,9 +85,9 @@ namespace DemoAPIApplication.Controllers
         {
             try
             {
-                return Ok(ChildDao.Delete(id));
+                return Ok(_childrenRepository.Delete(id));
             }
-            catch (Exception e)
+            catch (ValidationException e)
             {
                 return BadRequest(e.Message);
             }

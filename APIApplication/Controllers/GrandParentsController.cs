@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using AutoMapper;
 using DataAccess;
 using DataAccess.Objects;
 using Microsoft.AspNetCore.Mvc;
@@ -10,22 +11,17 @@ namespace DemoAPIApplication.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class GrandParentController : Controller
+    public class GrandParentsController : Controller
     {
-        private readonly IGrandParentDao GrandParentDao;
-        private readonly IChildDao ChildDao;
-        private readonly Utility Utility = new();
+        private readonly IGrandParentsRepository _grandParentsRepository;
+        private readonly IChildrenRepository _childrenRepository;
+        private readonly IMapper _mapper;
 
-        public GrandParentController()
+        public GrandParentsController(IGrandParentsRepository grandParentsRepository , IChildrenRepository childrenRepository, IMapper mapper)
         {
-            GrandParentDao = new GrandParentDao(new SqlConnection(Configuration.GetConnectionString()));
-            ChildDao = new ChildDao(new SqlConnection(Configuration.GetConnectionString()));
-        }
-
-        public GrandParentController(IGrandParentDao grandParentDao , IChildDao childDao)
-        {
-            GrandParentDao = grandParentDao ;
-            ChildDao = childDao ;
+            _grandParentsRepository = grandParentsRepository ;
+            _childrenRepository = childrenRepository ;
+            _mapper = mapper;
         }
         
         [HttpGet(Name = "GetGrandParents")]
@@ -33,8 +29,8 @@ namespace DemoAPIApplication.Controllers
         {
             try
             {
-                if (id == 0) return Ok(GrandParentDao.GetAll());
-                var item = GrandParentDao.Get(id);
+                if (id == 0) return Ok(_grandParentsRepository.GetAll());
+                var item = _grandParentsRepository.Get(id);
                 if (item == null)
                 {
                     return NotFound();
@@ -57,13 +53,13 @@ namespace DemoAPIApplication.Controllers
         [HttpPost(Name = "AddGrandParent")]
         public ActionResult<Models.GrandParent> Add(Models.GrandParent item)
         {
-            var itemToAdd = Utility.GetAutoMapper().Map<GrandParent>(item);
+            var itemToAdd = _mapper.Map<GrandParent>(item);
 
-            if (itemToAdd.PrimaryChild != 0)
+            if (itemToAdd.PrimaryChildId != 0)
             {
                 try
                 {
-                    Ok(ChildDao.Get(itemToAdd.PrimaryChild));
+                    Ok(_childrenRepository.Get(itemToAdd.PrimaryChildId));
                 }
                 catch (Exception)
                 {
@@ -72,7 +68,7 @@ namespace DemoAPIApplication.Controllers
 
                 try
                 {
-                    return Ok(GrandParentDao.Add(itemToAdd));
+                    return Ok(_grandParentsRepository.Add(itemToAdd));
                 }
                 catch (Exception e)
                 {
@@ -88,30 +84,30 @@ namespace DemoAPIApplication.Controllers
         [HttpPut(Name = "UpdateGrandParent")]
         public ActionResult<Models.GrandParent> Update(Models.GrandParent item, int id)
         {
-            var itemToUpdate = Utility.GetAutoMapper().Map<GrandParent>(item);
+            var itemToUpdate = _mapper.Map<GrandParent>(item);
             itemToUpdate.Id = id;
 
-            if (itemToUpdate.PrimaryChild != 0)
+            if (itemToUpdate.PrimaryChildId != 0)
             {
                 try
                 {
-                    Ok(ChildDao.Get(itemToUpdate.PrimaryChild));
+                    Ok(_childrenRepository.Get(itemToUpdate.PrimaryChildId));
                 }
                 catch (Exception)
                 {
-                    return BadRequest($"Primary Child : {itemToUpdate.PrimaryChild} does not exist.");
+                    return BadRequest($"Primary Child : {itemToUpdate.PrimaryChildId} does not exist.");
                 }
             }
             try
             {
                 if (itemToUpdate.Name == null && itemToUpdate.Description == null)
                 {
-                    return Ok(GrandParentDao.UpdateGrandParentWithPrimaryChild(itemToUpdate.Id,
-                        itemToUpdate.PrimaryChild));
+                    return Ok(_grandParentsRepository.UpdateGrandParentWithPrimaryChild(itemToUpdate.Id,
+                        itemToUpdate.PrimaryChildId));
                 }
                 else
                 {
-                    return Ok(GrandParentDao.Update(itemToUpdate));
+                    return Ok(_grandParentsRepository.Update(itemToUpdate));
                 }
             }
             catch (Exception e)
@@ -125,7 +121,7 @@ namespace DemoAPIApplication.Controllers
         {
             try
             {
-                return Ok(GrandParentDao.Delete(id));
+                return Ok(_grandParentsRepository.Delete(id));
             }
             catch (Exception e)
             {

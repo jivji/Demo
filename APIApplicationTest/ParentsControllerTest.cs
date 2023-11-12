@@ -10,14 +10,14 @@ using Moq;
 namespace APIApplicationTest
 {
     [TestClass]
-    public class ParentControllerTest
+    public class ParentsControllerTest
     {
         [TestMethod]
         public void GetAll_AllParents()
         {
             // Arrange
-            var parentDaoMock = new Mock<IParentDao>();
-            var grandParentDaoMock = new Mock<IGrandParentDao>();
+            var parentDaoMock = new Mock<IParentsRepository>();
+            var grandParentDaoMock = new Mock<IGrandParentsRepository>();
             var parents = new List<Parent>()
             {
                 new()
@@ -34,7 +34,7 @@ namespace APIApplicationTest
                 }
             };
             parentDaoMock.Setup(x => x.GetAll()).Returns(parents);
-            var parentController = new ParentController(parentDaoMock.Object, grandParentDaoMock.Object);
+            var parentController = new ParentsController(parentDaoMock.Object, grandParentDaoMock.Object);
 
             // Act
             var result = parentController.Get(0);
@@ -53,8 +53,8 @@ namespace APIApplicationTest
         public void Update_ValidGrandParentId_ParentUpdatedWithGrandParent()
         {
             // Arrange
-            var parentDaoMock = new Mock<IParentDao>();
-            var grandParentDaoMock = new Mock<IGrandParentDao>();
+            var parentDaoMock = new Mock<IParentsRepository>();
+            var grandParentDaoMock = new Mock<IGrandParentsRepository>();
             var parent = new DemoAPIApplication.Models.Parent()
             {
                 Name = "Parent1",
@@ -65,7 +65,7 @@ namespace APIApplicationTest
             parentDaoMock.Setup(x => x.Update(It.IsAny<Parent>())).Returns(1);
 
             // Act
-            var parentController = new ParentController(parentDaoMock.Object, grandParentDaoMock.Object);
+            var parentController = new ParentsController(parentDaoMock.Object, grandParentDaoMock.Object);
             var result = parentController.Update(parent, granParentID);
 
             // Assert

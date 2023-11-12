@@ -13,9 +13,16 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddScoped<IDbConnection>((_) => new SqlConnection(Configuration.GetConnectionString()));
 
-builder.Services.AddScoped<IParentDao, ParentDao>();
-builder.Services.AddScoped<IGrandParentDao, GrandParentDao>();
+builder.Services.AddScoped<IGrandParentsRepository, GrandParentsRepository>();
+builder.Services.AddScoped<IParentsRepository, ParentsRepository>();
+builder.Services.AddScoped<IChildrenRepository, ChildrenRepository>();
 
+var mapperConfiguration = new MapperConfiguration(cfg =>
+{
+    cfg.AddProfile<MappingProfile>();
+});
+
+builder.Services.AddSingleton<IMapper>(mapperConfiguration.CreateMapper());
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

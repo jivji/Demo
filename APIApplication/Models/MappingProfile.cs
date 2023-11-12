@@ -7,9 +7,9 @@ namespace DemoAPIApplication
     {
         public MappingProfile()
         {
-            CreateMap<Models.GrandParent, GrandParent>();
-            CreateMap<Models.Child, Child>();
-            CreateMap<Models.Parent, Parent>();
+            CreateMap<Models.GrandParent, GrandParent>().ReverseMap();
+            CreateMap<Models.Child, Child>().ReverseMap();
+            CreateMap<Models.Parent, Parent>().ReverseMap();
         }
     }
 }
