@@ -42,7 +42,7 @@ namespace DataAccess.Objects
                 int exec = 0;
                 try
                 {
-                    exec = _connection.ExecuteScalar<int>("INSERT INTO GrandParents (Name, Description, PrimaryChild) VALUES (@Name, @Description, @PrimaryChild); SELECT CAST(SCOPE_IDENTITY() AS INT)", grandParent);
+                    exec = _connection.ExecuteScalar<int>("INSERT INTO GrandParents (Name, Description, PrimaryChildId) VALUES (@Name, @Description, @PrimaryChildId); SELECT CAST(SCOPE_IDENTITY() AS INT)", grandParent);
                 }
                 catch (SqlException ex)
                 {
@@ -54,7 +54,7 @@ namespace DataAccess.Objects
             
             public int Update(GrandParent grandParent)
             {
-                return _connection.Execute("UPDATE GrandParents SET Name = @Name, Description = @Description, PrimaryChild = @PrimaryChild WHERE Id = @Id;", new {Name = grandParent.Name, Description = grandParent.Description, PrimaryChild = grandParent.PrimaryChildId, Id=grandParent.Id });
+                return _connection.Execute("UPDATE GrandParents SET Name = @Name, Description = @Description, PrimaryChildId = @PrimaryChildId WHERE Id = @Id;", new {Name = grandParent.Name, Description = grandParent.Description, PrimaryChildId = grandParent.PrimaryChildId, Id=grandParent.Id });
             }
 
             public int Delete(int grandParentId)
@@ -64,7 +64,7 @@ namespace DataAccess.Objects
 
             public int UpdateGrandParentWithPrimaryChild(int grandParentId, int childId)
             {
-                return _connection.Execute("UPDATE GrandParents SET PrimaryChild = @PrimaryChild WHERE Id=@Id", new {Id = grandParentId, PrimaryChild = childId});
+                return _connection.Execute("UPDATE GrandParents SET PrimaryChildId = @PrimaryChildId WHERE Id=@Id", new {Id = grandParentId, PrimaryChildId = childId});
             }
 
     }
