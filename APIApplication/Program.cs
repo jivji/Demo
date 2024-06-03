@@ -16,6 +16,15 @@ builder.Services.AddScoped<IDbConnection>((_) => new SqlConnection(Configuration
 builder.Services.AddScoped<IGrandParentsRepository, GrandParentsRepository>();
 builder.Services.AddScoped<IParentsRepository, ParentsRepository>();
 builder.Services.AddScoped<IChildrenRepository, ChildrenRepository>();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", builder =>
+    {
+        builder.AllowAnyOrigin();
+        builder.AllowAnyMethod();
+        builder.AllowAnyHeader();
+    });
+});
 
 var mapperConfiguration = new MapperConfiguration(cfg =>
 {
@@ -44,6 +53,7 @@ var config = new MapperConfiguration(cfg =>
 
 IMapper mapper = config.CreateMapper();
 
+app.UseCors("AllowAll");
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();

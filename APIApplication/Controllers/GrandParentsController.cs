@@ -37,7 +37,9 @@ namespace DemoAPIApplication.Controllers
                 Models.GrandParent grandParent = new()
                 {
                     Name = item.Name,
-                    Description = item.Description
+                    Description = item.Description,
+                    PrimaryChildId = item.PrimaryChildId,
+                    PrimaryChild = item.PrimaryChild
                 };
 
                 return new List<Models.GrandParent> {grandParent};
@@ -100,7 +102,7 @@ namespace DemoAPIApplication.Controllers
             {
                 if (itemToUpdate.Name == null && itemToUpdate.Description == null)
                 {
-                    return Ok(_grandParentsRepository.UpdateGrandParentWithPrimaryChild(itemToUpdate.Id,
+                    return Ok(_grandParentsRepository.UpdateGrandParentWithPrimaryChildId(itemToUpdate.Id,
                         itemToUpdate.PrimaryChildId));
                 }
                 else

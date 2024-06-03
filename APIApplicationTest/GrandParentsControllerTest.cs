@@ -75,7 +75,7 @@ namespace APIApplicationTest
             var childDaoMock = new Mock<IChildrenRepository>();
             var grandParent = new DemoAPIApplication.Models.GrandParent()
             {
-                PrimaryChild = 1,
+                PrimaryChildId = 1,
                 Name = "Child1",
                 Description = "Description1"
             };

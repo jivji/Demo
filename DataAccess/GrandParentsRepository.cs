@@ -14,7 +14,7 @@ namespace DataAccess.Objects
         int Add(GrandParent item);
         int Update(GrandParent item);
         int Delete(int itemId);
-        int UpdateGrandParentWithPrimaryChild(int itemId, int childId);
+        int UpdateGrandParentWithPrimaryChildId(int itemId, int childId);
     }
 
     public class GrandParentsRepository : IGrandParentsRepository
@@ -29,12 +29,12 @@ namespace DataAccess.Objects
 
             public GrandParent? Get(int grandParentId)
             {
-                return _connection.QueryFirstOrDefault<GrandParent>("SELECT * FROM GrandParents WHERE Id = @ID", new { ID = grandParentId });
+                return _connection.QueryFirstOrDefault<GrandParent>("SELECT GrandParents.*, Children.Name AS PrimaryChild FROM GrandParents JOIN Children ON GrandParents.PrimaryChildId = Children.Id WHERE GrandParents.Id = @ID", new { ID = grandParentId });
             }
 
             public IEnumerable<GrandParent> GetAll()
             {
-                return _connection.Query<GrandParent>("SELECT * FROM GrandParents");
+                return _connection.Query<GrandParent>("SELECT GrandParents.*, Children.Name AS PrimaryChild FROM GrandParents JOIN Children ON GrandParents.PrimaryChildId = Children.Id");
             }
 
             public int Add(GrandParent grandParent)
@@ -42,7 +42,7 @@ namespace DataAccess.Objects
                 int exec = 0;
                 try
                 {
-                    exec = _connection.ExecuteScalar<int>("INSERT INTO GrandParents (Name, Description, PrimaryChild) VALUES (@Name, @Description, @PrimaryChild); SELECT CAST(SCOPE_IDENTITY() AS INT)", grandParent);
+                    exec = _connection.ExecuteScalar<int>("INSERT INTO GrandParents (Name, Description, PrimaryChildId) VALUES (@Name, @Description, @PrimaryChildId); SELECT CAST(SCOPE_IDENTITY() AS INT)", grandParent);
                 }
                 catch (SqlException ex)
                 {
@@ -54,7 +54,7 @@ namespace DataAccess.Objects
             
             public int Update(GrandParent grandParent)
             {
-                return _connection.Execute("UPDATE GrandParents SET Name = @Name, Description = @Description, PrimaryChild = @PrimaryChild WHERE Id = @Id;", new {Name = grandParent.Name, Description = grandParent.Description, PrimaryChild = grandParent.PrimaryChildId, Id=grandParent.Id });
+                return _connection.Execute("UPDATE GrandParents SET Name = @Name, Description = @Description, PrimaryChildId = @PrimaryChildId WHERE Id = @Id;", new {Name = grandParent.Name, Description = grandParent.Description, PrimaryChildId = grandParent.PrimaryChildId, Id=grandParent.Id });
             }
 
             public int Delete(int grandParentId)
@@ -62,9 +62,9 @@ namespace DataAccess.Objects
                 return _connection.Execute("DELETE FROM GrandParents WHERE Id=@Id", new {Id = grandParentId});
             }
 
-            public int UpdateGrandParentWithPrimaryChild(int grandParentId, int childId)
+            public int UpdateGrandParentWithPrimaryChildId(int grandParentId, int primaryChildId)
             {
-                return _connection.Execute("UPDATE GrandParents SET PrimaryChild = @PrimaryChild WHERE Id=@Id", new {Id = grandParentId, PrimaryChild = childId});
+                return _connection.Execute("UPDATE GrandParents SET PrimaryChild = @PrimaryChildId WHERE Id=@Id", new {Id = grandParentId, PrimaryChildId = primaryChildId});
             }
 
     }
