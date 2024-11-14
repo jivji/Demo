@@ -16,6 +16,7 @@ builder.Services.AddScoped<IDbConnection>((_) => new SqlConnection(Configuration
 builder.Services.AddScoped<IGrandParentsRepository, GrandParentsRepository>();
 builder.Services.AddScoped<IParentsRepository, ParentsRepository>();
 builder.Services.AddScoped<IChildrenRepository, ChildrenRepository>();
+builder.Services.AddScoped<IPrimaryMarketDataRepository, PrimaryMarketDataRepository>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", builder =>
