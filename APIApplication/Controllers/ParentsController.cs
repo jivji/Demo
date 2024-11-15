@@ -6,8 +6,8 @@ using Parent = DemoAPIApplication.Models.Parent;
 
 namespace DemoAPIApplication.Controllers
 {
-    [ApiController]
-    [Route("[controller]/[action]")]
+/*    [ApiController]
+    [Route("[controller]/[action]")]*/
     public class ParentsController : Controller
     {
         private readonly IParentsRepository _parentsRepository;

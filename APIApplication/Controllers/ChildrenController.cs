@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DemoAPIApplication.Controllers
 {
-    [ApiController]
-    [Route("[controller]")]
+    /*[ApiController]
+    [Route("[controller]")]*/
     public class ChildrenController : Controller
     {
         private readonly IChildrenRepository _childrenRepository;
