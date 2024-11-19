@@ -28,5 +28,10 @@
 	public DateTime? FirstCouponDate { get; set; }
 	public double? CouponAmount { get; set; }
 	public double? Spread { get; set; }
+	public string IPT { get; set; }
+	public string Guidance { get; set; }
+	public string ISIN { get; set; }
+	public string CUSIP { get; set; }
+	public string FIGI { get; set; }
   }
 }

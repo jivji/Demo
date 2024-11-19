@@ -22,7 +22,6 @@ namespace DataAccess.Objects
 	public string Moodys { get; set; }
 	public string Sp { get; set; }
 	public string Fitch { get; set; }
-	//[JsonProperty("name")]
 	public string IssuerName { get; set; }
 	public string Name { get; set; }
 	public string MidName { get; set; }
@@ -32,10 +31,14 @@ namespace DataAccess.Objects
 	public string Index { get; set; }
 	public DateTime? FirstCouponDate { get; set; }
 	public double? CouponAmount { get; set; }
-	[JsonIgnore]
 	public double? Spread { get; set; }
+	public string IPT { get; set; }
+	public string Guidance { get; set; }
+	public string ISIN { get; set; }
+	public string CUSIP { get; set; }
+	public string FIGI { get; set; }
 	[JsonIgnore]
-	public List<Tranche> tranches { get; set; }
+	public List<Tranche> Tranches { get;set; }
   }
 
   public class Tranche
@@ -49,7 +52,8 @@ namespace DataAccess.Objects
 	public Ratings Ratings { get; set; }
 	public Issuer Issuer { get; set; }
 	public Coupon Coupon { get; set; }
-
+	public Pricing Pricing { get; set; }
+	public List<Securities> Securities { get; set; }
   }
 
   public class Ratings
@@ -76,10 +80,22 @@ namespace DataAccess.Objects
 	public string PaymentType { get; set; }
 	public string Frequency { get; set; }
 	public string Index { get; set; }
-	public DateTime? FirstCouponDate { get; set; }
-	//[JsonProperty("coupon")]
+	public DateTime? FirstCouponDate { get; set; }	
 	public double? CouponAmount { get; set; }
 	public double? Spread { get; set; }
+  }
+
+  public class Pricing
+  {
+	public string IPT { get; set; }
+	public string Guidance { get; set; }
+  }
+
+  public class Securities
+  {
+	public string ISIN { get; set; }
+	public string CUSIP { get; set; }
+	public string FIGI { get; set; }
   }
 }
 
