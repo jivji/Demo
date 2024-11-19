@@ -1,17 +1,21 @@
 ﻿using DataAccess.Objects;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace DataAccess.Objects
 {
   public interface IPrimaryMarketDataRepository
   {
-	public Task<string> Get();
+	public Task<List<DealVersion>> Get();
   }
   public class PrimaryMarketDataRepository: IPrimaryMarketDataRepository
   {
@@ -27,6 +31,40 @@ namespace DataAccess.Objects
 
 	public PrimaryMarketDataRepository()
 	{
+	}
+
+	public async Task<List<DealVersion>> Get()
+	{
+	  if (string.IsNullOrEmpty(Token) || DateTime.UtcNow >= TokenExpiry)
+	  {
+		await RefreshTokenAsync();
+	  }
+
+	  using (HttpClient client = new HttpClient())
+	  {
+		// Set up the authorization header with the predefined token
+		client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Token);
+		client.DefaultRequestHeaders.Add("x-api-key", ApiKey);
+
+		try
+		{
+		  // Make the GET request
+		  HttpResponseMessage response = await client.GetAsync(ApiUrl);		  
+		  response.EnsureSuccessStatusCode(); // Throws if the response is not successful
+
+		  // Read and return the response content as a string
+		  string responseData = await response.Content.ReadAsStringAsync();
+
+		  // Extract the DealVersions from the response data
+		  List<DealVersion> dealVersions = ExtractDealVersions(responseData);
+		  return dealVersions;
+		}
+		catch (HttpRequestException e)
+		{
+		  // Handle the error as needed; for now, return an error message
+		  throw new Exception($"Request error: {e.Message}");
+		}
+	  }
 	}
 
 	private static async Task RefreshTokenAsync()
@@ -62,38 +100,49 @@ namespace DataAccess.Objects
 		  throw;
 		}
 	  }
-	}
+	}	
 
-
-	public async Task<string> Get()
+	private List<DealVersion> ExtractDealVersions(string data)
 	{
-	  if (string.IsNullOrEmpty(Token) || DateTime.UtcNow >= TokenExpiry)
+	  try
 	  {
-		await RefreshTokenAsync();
+		var jsonObject = JObject.Parse(data);
+		var dealVersionsArray = jsonObject["values"]["dealVersions"].ToString();
+		var dealVersions = JsonConvert.DeserializeObject<List<DataAccess.Objects.DealVersion>>(dealVersionsArray);
+		return dealVersions.Select(dv => new DealVersion
+		{
+		  Id = dv.Id,
+		  DealId = dv.DealId,
+		  ActualSize = dv.ActualSize,
+		  CurrencyCode = dv.CurrencyCode,
+		  MaturityTerm = dv.tranches?.FirstOrDefault()?.MaturityTerm ?? 0,
+		  SettlementDate = dv.tranches?.FirstOrDefault().SettlementDate ?? null,
+		  MaturityDate = dv.tranches?.FirstOrDefault().MaturityDate ?? null,
+		  MinimumDenomination = dv.tranches?.FirstOrDefault().MinimumDenomination,
+		  MultipleDenomination = dv.tranches?.FirstOrDefault().MultipleDenomination,
+		  MinimumOrderSize = dv.tranches?.FirstOrDefault().MinimumOrderSize,
+		  Moodys = dv.tranches?.FirstOrDefault().Ratings?.Moodys,
+		  Sp = dv.tranches?.FirstOrDefault().Ratings?.Sp,
+		  Fitch = dv.tranches?.FirstOrDefault().Ratings?.Fitch,
+		  IssuerName = dv.tranches?.FirstOrDefault().Issuer?.Name,
+		  Name = dv.tranches?.FirstOrDefault().Issuer.Industry?.Name,
+		  MidName = dv.tranches?.FirstOrDefault().Issuer.Industry?.MidName,
+		  MacroName = dv.tranches?.FirstOrDefault().Issuer.Industry?.MacroName,
+		  PaymentType = dv.tranches?.FirstOrDefault().Coupon?.PaymentType,
+		  Frequency = dv.tranches?.FirstOrDefault().Coupon?.Frequency,
+		  Index = dv.tranches?.FirstOrDefault().Coupon?.Index,
+		  FirstCouponDate = dv.tranches?.FirstOrDefault().Coupon?.FirstCouponDate,
+		  CouponAmount = dv.tranches?.FirstOrDefault().Coupon?.CouponAmount,
+		  Spread = dv.tranches?.FirstOrDefault().Coupon?.Spread,
+		}).ToList();
 	  }
-
-	  using (HttpClient client = new HttpClient())
+	  catch (Newtonsoft.Json.JsonException ex)
 	  {
-		// Set up the authorization header with the predefined token
-		client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Token);
-		client.DefaultRequestHeaders.Add("x-api-key", ApiKey);
-
-		try
-		{
-		  // Make the GET request
-		  HttpResponseMessage response = await client.GetAsync(ApiUrl);
-		  response.EnsureSuccessStatusCode(); // Throws if the response is not successful
-
-		  // Read and return the response content as a string
-		  return await response.Content.ReadAsStringAsync();
-		}
-		catch (HttpRequestException e)
-		{
-		  // Handle the error as needed; for now, return an error message
-		  return $"Request error: {e.Message}";
-		}
+		// Log the exception or handle it as needed
+		Console.WriteLine($"JSON parsing error: {ex.Message}");
+		return new List<DealVersion>(); // Return an empty list or handle the error appropriately
 	  }
 	}
-
   }
 }
+
