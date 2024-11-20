@@ -1,5 +1,4 @@
-﻿using DataAccess.Objects;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -109,36 +108,40 @@ namespace DataAccess.Objects
 		var jsonObject = JObject.Parse(data);
 		var dealVersions = jsonObject["values"]["dealVersions"].ToString();
 		var dealVersionsArray = JsonConvert.DeserializeObject<List<DataAccess.Objects.DealVersion>>(dealVersions);
-		return dealVersionsArray.Select(dv => new DealVersion
-		{
-		  Id = dv.Id,
-		  DealId = dv.DealId,
-		  ActualSize = dv.ActualSize,
-		  CurrencyCode = dv.CurrencyCode,
-		  MaturityTerm = dv.Tranches?.FirstOrDefault()?.MaturityTerm ?? 0,
-		  SettlementDate = dv.Tranches?.FirstOrDefault().SettlementDate ?? null,
-		  MaturityDate = dv.Tranches?.FirstOrDefault().MaturityDate ?? null,
-		  MinimumDenomination = dv.Tranches?.FirstOrDefault().MinimumDenomination,
-		  MultipleDenomination = dv.Tranches?.FirstOrDefault().MultipleDenomination,
-		  MinimumOrderSize = dv.Tranches?.FirstOrDefault().MinimumOrderSize,
-		  Moodys = dv.Tranches?.FirstOrDefault().Ratings?.Moodys,
-		  Sp = dv.Tranches?.FirstOrDefault().Ratings?.Sp,
-		  Fitch = dv.Tranches?.FirstOrDefault().Ratings?.Fitch,
-		  IssuerName = dv.Tranches?.FirstOrDefault().Issuer?.Name,
-		  Name = dv.Tranches?.FirstOrDefault().Issuer.Industry?.Name,
-		  MidName = dv.Tranches?.FirstOrDefault().Issuer.Industry?.MidName,
-		  MacroName = dv.Tranches?.FirstOrDefault().Issuer.Industry?.MacroName,
-		  PaymentType = dv.Tranches?.FirstOrDefault().Coupon?.PaymentType,
-		  Frequency = dv.Tranches?.FirstOrDefault().Coupon?.Frequency,
-		  Index = dv.Tranches?.FirstOrDefault().Coupon?.Index,
-		  FirstCouponDate = dv.Tranches?.FirstOrDefault().Coupon?.FirstCouponDate,
-		  CouponAmount = dv.Tranches?.FirstOrDefault().Coupon?.CouponAmount,
-		  Spread = dv.Tranches?.FirstOrDefault().Coupon?.Spread,
-		  IPT = dv.Tranches.FirstOrDefault().Pricing?.IPT,
-		  Guidance = dv.Tranches.FirstOrDefault().Pricing?.Guidance,
-		  ISIN = dv.Tranches.FirstOrDefault().Securities?.FirstOrDefault().ISIN,
-		  CUSIP = dv.Tranches.FirstOrDefault().Securities?.FirstOrDefault().CUSIP,
-		  FIGI = dv.Tranches.FirstOrDefault().Securities?.FirstOrDefault().FIGI,
+		return dealVersionsArray.Select(dv => {
+		  var firstTranche = dv.Tranches?.FirstOrDefault();
+		  var firstSecurity = firstTranche?.Securities?.FirstOrDefault();
+		  return new DealVersion
+		  {
+			Id = dv.Id,
+			DealId = dv.DealId,
+			ActualSize = dv.ActualSize,
+			CurrencyCode = dv.CurrencyCode,
+			MaturityTerm = firstTranche?.MaturityTerm ?? 0,
+			SettlementDate = firstTranche?.SettlementDate,
+			MaturityDate = firstTranche?.MaturityDate,
+			MinimumDenomination = firstTranche?.MinimumDenomination,
+			MultipleDenomination = firstTranche?.MultipleDenomination,
+			MinimumOrderSize = firstTranche?.MinimumOrderSize,
+			Moodys = firstTranche?.Ratings?.Moodys,
+			Sp = firstTranche?.Ratings?.Sp,
+			Fitch = firstTranche?.Ratings?.Fitch,
+			IssuerName = firstTranche?.Issuer?.Name,
+			Name = firstTranche?.Issuer?.Industry?.Name,
+			MidName = firstTranche?.Issuer?.Industry?.MidName,
+			MacroName = firstTranche?.Issuer?.Industry?.MacroName,
+			PaymentType = firstTranche?.Coupon?.PaymentType,
+			Frequency = firstTranche?.Coupon?.Frequency,
+			Index = firstTranche?.Coupon?.Index,
+			FirstCouponDate = firstTranche?.Coupon?.FirstCouponDate,
+			CouponAmount = firstTranche?.Coupon?.CouponAmount,
+			Spread = firstTranche?.Coupon?.Spread,
+			IPT = firstTranche?.Pricing?.IPT,
+			Guidance = firstTranche?.Pricing?.Guidance,
+			ISIN = firstSecurity?.ISIN,
+			CUSIP = firstSecurity?.CUSIP,
+			FIGI = firstSecurity?.FIGI,
+		  };
 		}).ToList();
 	  }
 	  catch (Newtonsoft.Json.JsonException ex)
